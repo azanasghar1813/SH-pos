@@ -82,7 +82,7 @@ export function CustomerPanelModal({ isOpen, onClose, onSuccess, onPrint }: Cust
         setNewAddress("")
         setNewNotes("")
         setIsVip(false)
-        setIsFavourite(true) // Default to true so it saves to DB
+        setIsFavourite(false) // Default to OFF to prevent database bloat
         setEditingCustomerId(null)
         setSuggestedCustomer(null)
       }
@@ -257,7 +257,7 @@ export function CustomerPanelModal({ isOpen, onClose, onSuccess, onPrint }: Cust
     setNewAddress("")
     setNewNotes("")
     setIsVip(false)
-    setIsFavourite(true) // Default to true so it saves to DB
+    setIsFavourite(false) // Default to OFF to prevent database bloat
     setEditingCustomerId(null)
     setSuggestedCustomer(null)
   }

@@ -186,7 +186,7 @@ export default function Dashboard() {
   useEffect(() => {
     fetchDashboardData()
     fetchTableData()
-    syncOrdersFromBackend()
+    syncOrdersFromBackend({ business_date: DateUtils.getBusinessDate(), lifecycle_state: 'ACTIVE,DRAFT' })
     // Poll every 60 seconds
     const interval = setInterval(() => {
       fetchDashboardData()

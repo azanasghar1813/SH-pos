@@ -6,7 +6,7 @@ import { syncService } from '../services/syncService.js';
 import { dbEngine } from '../database/sqlite.js';
 import { configService } from '../services/configService.js';
 import { SYSTEM_USER_ID, SYSTEM_SHIFT_ID } from './syncIdentities.js';
-import { installGuardedSyncTriggers, unmuteSyncTriggers, withSyncMuted } from './syncTriggers.js';
+import { installGuardedSyncTriggers, unmuteSyncTriggers, withSyncMuted, dropAllSyncTriggers, muteSyncTriggers } from './syncTriggers.js';
 import { menuCacheService } from '../services/menuCacheService.js';
 import { preferLocalProductImage } from '../utils/localProductImage.js';
 import { orderNumberService } from '../services/orderNumberService.js';
@@ -398,6 +398,13 @@ class SyncWorker {
     const syncConfig = configService.getSyncConfig();
     if (syncConfig.device_role === 'TERMINAL') {
       this.logActivity('SyncWorker disabled on TERMINAL. Local LAN Hub is authoritative.');
+      return;
+    }
+
+    if (syncConfig.cloud_sync_enabled === false) {
+      dropAllSyncTriggers();
+      muteSyncTriggers();
+      this.logActivity('Cloud sync is disabled. Sync triggers dropped and worker idle.');
       return;
     }
 

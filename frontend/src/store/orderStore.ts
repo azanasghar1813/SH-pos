@@ -166,7 +166,8 @@ export const itemVariantName = (item: any): string => {
 }
 
 export const mapHistoryDetailToOrder = (row: HistoryOrderRow, detail?: HistoryOrderDetail): Order => {
-  const items = (detail?.items || []).map((item: any, index: number) => {
+  const rawItems = detail?.items || (row as any).items || []
+  const items = rawItems.map((item: any, index: number) => {
     const vName = itemVariantName(item)
     const base = item.product_name_snapshot || item.product_name || item.name || 'Item'
     return {
@@ -191,7 +192,16 @@ export const mapHistoryDetailToOrder = (row: HistoryOrderRow, detail?: HistoryOr
   }
   }) as unknown as CartItem[]
 
-  const payments = (detail?.payments || []).map((payment: any, index: number) => ({
+  const rawPayments = (detail?.payments && detail.payments.length > 0)
+    ? detail.payments
+    : ((row as any).primary_payment_method ? [{
+        payment_method: (row as any).primary_payment_method,
+        amount: Number(row.paid_total || row.grand_total || 0),
+        status: 'Completed',
+        cashier_name: (row as any).cashier_name || row.cashier_user_id
+      }] : [])
+
+  const payments = rawPayments.map((payment: any, index: number) => ({
     id: payment.id || `${row.id}-payment-${index}`,
     method: payment.payment_method || payment.method || 'Cash',
     amount: Number(payment.amount || 0),
@@ -380,23 +390,7 @@ export const useOrderStore = create<OrderState>((set, get) => ({
         page += 1
         if (page > 100) break
       }
-      const detailedOrders = []
-      const chunkSize = 10
-      
-      for (let i = 0; i < rows.length; i += chunkSize) {
-        const chunk = rows.slice(i, i + chunkSize)
-        const chunkResults = await Promise.all(
-          chunk.map(async (row: HistoryOrderRow) => {
-            try {
-              const detailResult = await fetchOrderDetail(row.id)
-              return mapHistoryDetailToOrder(row, detailResult.data)
-            } catch {
-              return mapHistoryDetailToOrder(row)
-            }
-          })
-        )
-        detailedOrders.push(...chunkResults)
-      }
+      const detailedOrders = rows.map((row: HistoryOrderRow) => mapHistoryDetailToOrder(row))
 
       let maxBusinessDate = ''
       detailedOrders.forEach(o => {

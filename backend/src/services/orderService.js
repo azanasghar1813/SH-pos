@@ -91,6 +91,18 @@ class OrderService {
       return null;
     }
   }
+
+  _existingId(table, id) {
+    if (!id || typeof id !== 'string') return null;
+    const cleanId = id.trim();
+    if (!cleanId || cleanId.startsWith('temp-')) return null;
+    try {
+      const row = dbEngine.db.prepare(`SELECT id FROM ${table} WHERE id = ?`).get(cleanId);
+      return row ? row.id : null;
+    } catch {
+      return null;
+    }
+  }
   /**
    * Retrieves full hydrated order graph.
    */
@@ -260,8 +272,8 @@ class OrderService {
         branch_id: branchId,
         cashier_user_id: userId,
         shift_id: shiftId,
-        customer_id: options.customer_id || null,
-        table_id: options.table_id || null,
+        customer_id: this._existingId('customers', options.customer_id),
+        table_id: this._resolveDiningTableId(options.table_id),
         order_type: options.order_type || 'DINE_IN',
         lifecycle_state: OrderLifecycleState.DRAFT,
         kitchen_state: 'PENDING',
@@ -640,6 +652,14 @@ class OrderService {
 
       if (meta.order_type !== undefined) {
         updates.order_type = meta.order_type;
+        if (meta.order_type !== 'DINE_IN' && meta.table_id === undefined && order.table_id) {
+          updates.table_id = null;
+          try {
+            releaseTableIfIdle(order.table_id);
+          } catch (e) {
+            console.warn('Failed to release old table on order_type change:', e.message);
+          }
+        }
       }
       if (meta.table_id !== undefined) {
         const resolvedTableId = this._resolveDiningTableId(meta.table_id);
@@ -651,18 +671,25 @@ class OrderService {
             console.warn('Failed to mark floor table occupied:', err.message);
           }
         }
+        if (order.table_id && order.table_id !== resolvedTableId) {
+          try {
+            releaseTableIfIdle(order.table_id);
+          } catch (err) {
+            console.warn('Failed to release old table on table change:', err.message);
+          }
+        }
       }
       if (meta.customer_id !== undefined) {
-        updates.customer_id = meta.customer_id;
+        updates.customer_id = this._existingId('customers', meta.customer_id);
       }
       if (meta.waiter_id !== undefined) {
-        updates.waiter_id = meta.waiter_id || null;
+        updates.waiter_id = this._existingId('users', meta.waiter_id);
       }
       if (meta.waiter_name_snapshot !== undefined) {
         updates.waiter_name_snapshot = meta.waiter_name_snapshot || null;
       }
       if (meta.rider_id !== undefined) {
-        updates.rider_id = meta.rider_id || null;
+        updates.rider_id = this._existingId('users', meta.rider_id);
       }
       if (meta.rider_name_snapshot !== undefined) {
         updates.rider_name_snapshot = meta.rider_name_snapshot || null;
@@ -691,9 +718,9 @@ class OrderService {
       }
       if (meta.is_vip !== undefined) {
         orderMetadataRepository.setMeta(orderId, 'is_vip', meta.is_vip ? 'true' : 'false');
-      } else if (meta.customer_id) {
+      } else if (updates.customer_id || order.customer_id) {
         try {
-          const cust = customerRepository.findById(meta.customer_id);
+          const cust = customerRepository.findById(updates.customer_id || order.customer_id);
           if (cust && (cust.is_vip === 1 || cust.is_vip === true || cust.isVip)) {
             orderMetadataRepository.setMeta(orderId, 'is_vip', 'true');
           }

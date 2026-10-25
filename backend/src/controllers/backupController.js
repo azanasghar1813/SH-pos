@@ -123,10 +123,20 @@ const performRestore = async (zipFilePath, isTempUpload = false) => {
 
     // Make a safety copy of the live database
     const liveDbPath = config.paths.database.file;
+    const liveWalPath = `${liveDbPath}-wal`;
+    const liveShmPath = `${liveDbPath}-shm`;
     const safetyCopyPath = `${liveDbPath}.bak`;
     console.log(`[BackupController] Creating safety copy at ${safetyCopyPath}...`);
     if (fs.existsSync(liveDbPath)) {
       fs.copyFileSync(liveDbPath, safetyCopyPath);
+    }
+
+    // Clean up existing WAL and SHM files so the restored database starts with a fresh journal
+    if (fs.existsSync(liveWalPath)) {
+      try { fs.unlinkSync(liveWalPath); } catch (e) { console.warn('Could not remove live WAL:', e.message); }
+    }
+    if (fs.existsSync(liveShmPath)) {
+      try { fs.unlinkSync(liveShmPath); } catch (e) { console.warn('Could not remove live SHM:', e.message); }
     }
 
     fs.copyFileSync(extractedDbPath, liveDbPath);

@@ -162,17 +162,18 @@ const createWindow = () => {
     height: 800,
     show: false,
     frame: false,
+    backgroundColor: '#ffffff',
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
+      sandbox: false,
+      backgroundThrottling: false
     }
   });
 
   mainWindow.setMenuBarVisibility(false);
   mainWindow.setMenu(null);
-  mainWindow.maximize();
 
   if (isProdMode) {
     mainWindow.loadURL(`http://127.0.0.1:${BACKEND_PORT}`);
@@ -181,12 +182,27 @@ const createWindow = () => {
     mainWindow.webContents.openDevTools();
   }
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  let isWindowRevealed = false;
+  const revealMainWindow = () => {
+    if (isWindowRevealed) return;
+    isWindowRevealed = true;
+
     if (splashWindow && !splashWindow.isDestroyed()) {
-      splashWindow.close();
+      splashWindow.setAlwaysOnTop(false);
+      splashWindow.destroy();
       splashWindow = null;
     }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.maximize();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  };
+
+  mainWindow.once('ready-to-show', revealMainWindow);
+  mainWindow.webContents.once('did-finish-load', () => {
+    setTimeout(revealMainWindow, 300);
   });
 };
 
@@ -307,6 +323,12 @@ const startBackendProcess = async () => {
       if (res.statusCode === 200) {
         if (mainWindow && !mainWindow.isDestroyed()) {
           console.log('Backend is healthy. Reloading existing window...');
+          if (splashWindow && !splashWindow.isDestroyed()) {
+            splashWindow.destroy();
+            splashWindow = null;
+          }
+          mainWindow.show();
+          mainWindow.focus();
           mainWindow.reload();
         } else {
           console.log('Backend is healthy! Creating main window...');
@@ -444,6 +466,14 @@ const createRendererWindow = () => new Promise((resolve, reject) => {
   win.webContents.once('did-finish-load', async () => {
     try {
       wc.debugger.attach('1.3'); // attached ONCE for the window's whole life
+      wc.debugger.on('detach', (_event, reason) => {
+        console.warn('[print-html] Chromium debugger detached:', reason);
+        if (rendererWindow && !rendererWindow.isDestroyed()) {
+          try { rendererWindow.destroy(); } catch { /* ignore */ }
+        }
+        rendererWindow = null;
+        rendererReady = null;
+      });
       await wc.debugger.sendCommand('Emulation.setDeviceMetricsOverride', {
         width: RECEIPT_CSS_WIDTH, height: 900, deviceScaleFactor: DSF, mobile: false
       });

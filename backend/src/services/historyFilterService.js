@@ -35,6 +35,10 @@ class HistoryFilterService {
         params.push(...dateCondition.params);
       }
     } else {
+      if (filters.business_date) {
+        conditions.push('o.business_date = ?');
+        params.push(filters.business_date);
+      }
       if (filters.date_from) {
         conditions.push('o.business_date >= ?');
         params.push(filters.date_from);

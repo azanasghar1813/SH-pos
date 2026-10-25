@@ -12,10 +12,15 @@ import { backupService } from './backup/backupService.js';
 import { socketService } from './services/socketService.js';
 import { lanCatalogSyncService } from './services/lanCatalogSyncService.js';
 import { lanSyncService } from './services/lanSyncService.js';
+import { syncService } from './services/syncService.js';
 process.on('uncaughtException', (err) => {
   console.error('[UNCAUGHT EXCEPTION]', err.name, err.message);
-  console.error(err.stack);
-  if (!process.versions.electron) {
+  if (err.stack) console.error(err.stack);
+  if (err?.code === 'ECONNRESET' || err?.code === 'ETIMEDOUT' || err?.code === 'EPIPE' || err?.code === 'ECONNREFUSED') {
+    console.warn('[UNCAUGHT EXCEPTION] Network/socket transient error ignored to keep POS operational.');
+    return;
+  }
+  if (!process.versions.electron && process.env.NODE_ENV !== 'production') {
     process.exit(1);
   }
 });
@@ -110,6 +115,10 @@ const startServer = async () => {
     printEngineService.start();
     printerDriverService.ensureRawWorker().catch(e => console.warn('[PrinterDriver] Prewarming worker failed:', e.message));
     syncWorker.start();
+    const syncCfg = configService.getSyncConfig();
+    if (!syncCfg.cloud_sync_enabled) {
+      syncService.purgeAllSyncQueue();
+    }
     backupService.startScheduler();
     lanCatalogSyncService.startAutoSync();
     lanSyncService.startBackgroundRetries();
@@ -127,12 +136,10 @@ const startServer = async () => {
     socketService.attach(server);
 
     process.on('unhandledRejection', (err) => {
-      console.error('[UNHANDLED REJECTION]', err?.name, err?.message);
-      if (!process.versions.electron) {
-        printEngineService.stop();
-        dbEngine.close();
-        server.close(() => process.exit(1));
-      }
+      console.error('[UNHANDLED REJECTION - RECOVERED]', err?.name, err?.message);
+      if (err?.stack) console.error(err.stack);
+      // In production POS server, do not crash the running service for transient background promises (LAN/sync/printer).
+      // Keep running and log error details.
     });
 
     let isShuttingDown = false;

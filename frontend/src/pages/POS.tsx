@@ -187,7 +187,7 @@ export default function POS() {
       const checkoutKey = newId()
       const checkoutResult: any = await cartService.checkout({
         order_type: state.orderType === 'Delivery' ? 'DELIVERY' : state.orderType === 'Takeaway' ? 'TAKEAWAY' : state.orderType === 'Drive Through' ? 'DRIVE_THROUGH' : 'DINE_IN',
-        customer_id: (!state.customer?.is_temp ? state.customer?.id : null) || null,
+        customer_id: (state.customer && !state.customer.is_temp && state.customer.id && !String(state.customer.id).startsWith('temp-')) ? state.customer.id : null,
         customer_name: state.customer?.name || null,
         customer_phone: state.customer?.phone || null,
         customer_address: state.customer?.address || null,
@@ -214,7 +214,7 @@ export default function POS() {
     try {
       await apiClient.put(`/orders/${currentOrderId}/meta`, {
         is_vip: !!(latest.isVipOrder || latest.customer?.is_vip || latest.customer?.isVip),
-        customer_id: (!latest.customer?.is_temp ? latest.customer?.id : null) || null,
+        customer_id: (latest.customer && !latest.customer.is_temp && latest.customer.id && !String(latest.customer.id).startsWith('temp-')) ? latest.customer.id : null,
         customer_name: latest.customer?.name || null,
         customer_phone: latest.customer?.phone || null,
         customer_address: latest.customer?.address || null,

@@ -3,7 +3,7 @@ import { OrderLifecycleState, OrderType } from '../constants/orderStates.js';
 
 export const createOrderSchema = z.object({
   order_type: z.nativeEnum(OrderType).optional().default(OrderType.DINE_IN),
-  customer_id: z.string().uuid().optional().nullable(),
+  customer_id: z.string().optional().nullable().transform(v => (!v || String(v).trim() === '' || String(v).startsWith('temp-') ? null : v)),
   table_id: z.string().optional().nullable(),
   branch_id: z.string().optional().default('DEFAULT_BRANCH'),
   notes: z.string().optional().nullable()

@@ -53,7 +53,7 @@ export const setCartNotesSchema = z.object({
 
 export const setCartMetaSchema = z.object({
   order_type: z.enum(['DINE_IN', 'TAKEAWAY', 'DELIVERY', 'DRIVE_THRU', 'DRIVE_THROUGH', 'ONLINE']).optional(),
-  customer_id: z.string().uuid().optional().nullable(),
+  customer_id: z.string().optional().nullable().transform(v => (!v || String(v).trim() === '' || String(v).startsWith('temp-') ? null : v)),
   table_id: z.string().optional().nullable(),
   waiter_id: z.string().optional().nullable(),
   waiter_name_snapshot: z.string().optional().nullable(),
@@ -67,7 +67,7 @@ export const setCartMetaSchema = z.object({
 
 export const checkoutCartSchema = z.object({
   order_type: z.enum(['DINE_IN', 'TAKEAWAY', 'DELIVERY', 'DRIVE_THRU', 'DRIVE_THROUGH', 'ONLINE']).optional(),
-  customer_id: z.string().uuid().optional().nullable(),
+  customer_id: z.string().optional().nullable().transform(v => (!v || String(v).trim() === '' || String(v).startsWith('temp-') ? null : v)),
   table_id: z.string().optional().nullable(),
   notes: z.string().max(1000).optional().nullable(),
   branch_id: z.string().optional(),

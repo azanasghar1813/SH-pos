@@ -88,20 +88,20 @@ class HistoryRepository {
         ) AS primary_payment_method,
         COALESCE(
           (SELECT meta_value FROM order_metadata om WHERE om.order_id = o.id AND om.meta_key = 'customer_name'),
-          (SELECT first_name || ' ' || COALESCE(last_name, '') FROM customers c WHERE c.id = o.customer_id)
+          NULLIF(TRIM(COALESCE(c.first_name, '') || ' ' || COALESCE(c.last_name, '')), '')
         ) AS customer_name,
         COALESCE(
           (SELECT meta_value FROM order_metadata om WHERE om.order_id = o.id AND om.meta_key = 'customer_phone'),
-          (SELECT phone FROM customers c WHERE c.id = o.customer_id)
+          c.phone
         ) AS customer_phone,
         COALESCE(
           (SELECT meta_value FROM order_metadata om WHERE om.order_id = o.id AND om.meta_key = 'customer_address'),
-          (SELECT address FROM customers c WHERE c.id = o.customer_id)
+          c.address
         ) AS customer_address,
         COALESCE(
           (SELECT CASE WHEN LOWER(CAST(meta_value AS TEXT)) IN ('true', '1') THEN 1 ELSE 0 END
            FROM order_metadata om WHERE om.order_id = o.id AND om.meta_key = 'is_vip' LIMIT 1),
-          (SELECT CASE WHEN is_vip IN (1, '1', 'true') THEN 1 ELSE 0 END FROM customers c WHERE c.id = o.customer_id),
+          CASE WHEN c.is_vip IN (1, '1', 'true') THEN 1 ELSE 0 END,
           0
         ) AS is_vip,
         COALESCE(
@@ -119,6 +119,7 @@ class HistoryRepository {
             )
         ) AS is_edited
       FROM orders o
+      LEFT JOIN customers c ON c.id = o.customer_id
       LEFT JOIN dining_tables dt ON dt.id = o.table_id
       LEFT JOIN users u ON u.id = o.cashier_user_id
       LEFT JOIN users w ON w.id = o.waiter_id
@@ -130,6 +131,39 @@ class HistoryRepository {
 
     const total   = dbEngine.prepare(countSql).get(...whereParams)?.total || 0;
     const orders  = dbEngine.prepare(listSql).all(...whereParams, limit, offset);
+
+    // Bulk hydrate lightweight items for all orders on this page in one query (no N+1)
+    if (orders.length > 0) {
+      const orderIds = orders.map(o => o.id);
+      const placeholders = orderIds.map(() => '?').join(',');
+      const items = dbEngine.prepare(`
+        SELECT id, order_id, product_id, product_name_snapshot, product_code_snapshot,
+               final_unit_price, quantity, subtotal
+        FROM order_items
+        WHERE order_id IN (${placeholders})
+        ORDER BY created_at ASC
+      `).all(...orderIds);
+
+      const itemsByOrderId = {};
+      for (const item of items) {
+        if (!itemsByOrderId[item.order_id]) itemsByOrderId[item.order_id] = [];
+        itemsByOrderId[item.order_id].push({
+          id: item.id,
+          product_id: item.product_id,
+          name: item.product_name_snapshot,
+          product_name_snapshot: item.product_name_snapshot,
+          code: item.product_code_snapshot || '',
+          price: item.final_unit_price,
+          final_unit_price: item.final_unit_price,
+          quantity: item.quantity,
+          subtotal: item.subtotal
+        });
+      }
+
+      for (const o of orders) {
+        o.items = itemsByOrderId[o.id] || [];
+      }
+    }
 
     return {
       orders,

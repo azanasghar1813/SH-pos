@@ -43,8 +43,33 @@ export function unmuteSyncTriggers() {
   } catch { /* table may not exist */ }
 }
 
+export function dropAllSyncTriggers() {
+  muteSyncTriggers();
+  for (const { table } of SYNC_TABLES) {
+    if (!tableExists(table)) continue;
+    try { dbEngine.db.exec(`DROP TRIGGER IF EXISTS sync_${table}_insert`); } catch { /* ignore */ }
+    try { dbEngine.db.exec(`DROP TRIGGER IF EXISTS sync_${table}_update`); } catch { /* ignore */ }
+    try { dbEngine.db.exec(`DROP TRIGGER IF EXISTS sync_${table}_delete`); } catch { /* ignore */ }
+  }
+}
+
 export function installGuardedSyncTriggers() {
   ensureSyncMuteTable();
+
+  // If cloud sync is not explicitly enabled, do NOT install triggers and drop any existing ones.
+  let isCloudSyncEnabled = false;
+  try {
+    const row = dbEngine.prepare("SELECT value FROM application_settings WHERE key = 'cloud_sync_enabled'").get();
+    isCloudSyncEnabled = row ? (row.value === 'true') : false;
+  } catch { /* DB not initialized yet */ }
+
+  if (!isCloudSyncEnabled) {
+    dropAllSyncTriggers();
+    muteSyncTriggers();
+    console.log('[syncTriggers] Cloud sync disabled. All sync triggers safely dropped & muted.');
+    return;
+  }
+
   unmuteSyncTriggers();
   try {
     dbEngine.prepare('ALTER TABLE sync_queue ADD COLUMN payload_version INTEGER NOT NULL DEFAULT 1').run();

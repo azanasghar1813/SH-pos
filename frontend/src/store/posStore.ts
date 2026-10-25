@@ -549,10 +549,20 @@ export const usePosStore = create<POSState>()(
         set({ checkoutIdempotencyKey: checkoutKey });
       }
 
+const resolveValidCustomerId = (customer?: any, fallbackId?: any): string | null => {
+  if (customer && !customer.is_temp && customer.id && !String(customer.id).startsWith('temp-')) {
+    return customer.id;
+  }
+  if (fallbackId && !String(fallbackId).startsWith('temp-')) {
+    return fallbackId;
+  }
+  return null;
+};
+
       if (!order.order_number) {
         const checkoutPayload = {
           order_type: state.orderType === 'Delivery' ? 'DELIVERY' : state.orderType === 'Takeaway' ? 'TAKEAWAY' : state.orderType === 'Drive Through' ? 'DRIVE_THROUGH' : 'DINE_IN',
-          customer_id: (!state.customer?.is_temp ? state.customer?.id : null) || order.customer_id || null,
+          customer_id: resolveValidCustomerId(state.customer, order.customer_id),
           customer_name: state.customer?.name || null,
           customer_phone: state.customer?.phone || null,
           customer_address: state.customer?.address || null,
@@ -593,7 +603,7 @@ export const usePosStore = create<POSState>()(
         parallelTasks.push(
           apiClient.put(`/orders/${order.id}/meta`, {
             is_vip: state.isVipOrder || !!state.customer?.is_vip || !!state.customer?.isVip || false,
-            customer_id: (!state.customer?.is_temp ? state.customer?.id : null) || order.customer_id || null,
+            customer_id: resolveValidCustomerId(state.customer, order.customer_id),
             customer_name: state.customer?.name || null,
             customer_phone: state.customer?.phone || null,
             customer_address: state.customer?.address || null,
@@ -771,7 +781,7 @@ export const usePosStore = create<POSState>()(
     try {
       const state = get();
       const meta = {
-        customer_id: customer?.id || null,
+        customer_id: (customer && !customer.is_temp && customer.id && !String(customer.id).startsWith('temp-')) ? customer.id : null,
         is_vip: customer ? vip : false,
         customer_name: customer?.name || null,
         customer_phone: customer?.phone || null,

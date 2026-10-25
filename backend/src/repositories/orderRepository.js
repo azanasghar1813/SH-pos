@@ -1,6 +1,32 @@
 import { dbEngine } from '../database/sqlite.js';
 
 class OrderRepository {
+  constructor() {
+    this._hasPayloadVersion = undefined;
+  }
+
+  _checkPayloadVersion() {
+    if (this._hasPayloadVersion !== undefined) return this._hasPayloadVersion;
+    try {
+      this._hasPayloadVersion = dbEngine.prepare("PRAGMA table_info(orders)").all().some((c) => c.name === 'payload_version');
+    } catch {
+      this._hasPayloadVersion = false;
+    }
+    return this._hasPayloadVersion;
+  }
+
+  _sanitizeForeignKey(table, id) {
+    if (!id || typeof id !== 'string') return null;
+    const clean = id.trim();
+    if (!clean || clean.startsWith('temp-')) return null;
+    try {
+      const row = dbEngine.prepare(`SELECT id FROM ${table} WHERE id = ?`).get(clean);
+      return row ? row.id : null;
+    } catch {
+      return null;
+    }
+  }
+
   create(orderData) {
     dbEngine.prepare(`
       INSERT INTO orders (
@@ -23,11 +49,11 @@ class OrderRepository {
       branch_id: orderData.branch_id || 'DEFAULT_BRANCH',
       cashier_user_id: orderData.cashier_user_id,
       shift_id: orderData.shift_id,
-      customer_id: orderData.customer_id || null,
-      table_id: orderData.table_id || null,
-      waiter_id: orderData.waiter_id || null,
+      customer_id: this._sanitizeForeignKey('customers', orderData.customer_id),
+      table_id: this._sanitizeForeignKey('dining_tables', orderData.table_id),
+      waiter_id: this._sanitizeForeignKey('users', orderData.waiter_id),
       waiter_name_snapshot: orderData.waiter_name_snapshot || null,
-      rider_id: orderData.rider_id || null,
+      rider_id: this._sanitizeForeignKey('users', orderData.rider_id),
       rider_name_snapshot: orderData.rider_name_snapshot || null,
       order_type: orderData.order_type || 'DINE_IN',
       lifecycle_state: orderData.lifecycle_state || 'DRAFT',
@@ -77,7 +103,21 @@ class OrderRepository {
     const fields = [];
     const params = { id };
 
-    for (const [key, value] of Object.entries(updates)) {
+    const safeUpdates = { ...updates };
+    if (safeUpdates.customer_id !== undefined) {
+      safeUpdates.customer_id = this._sanitizeForeignKey('customers', safeUpdates.customer_id);
+    }
+    if (safeUpdates.table_id !== undefined) {
+      safeUpdates.table_id = this._sanitizeForeignKey('dining_tables', safeUpdates.table_id);
+    }
+    if (safeUpdates.waiter_id !== undefined) {
+      safeUpdates.waiter_id = this._sanitizeForeignKey('users', safeUpdates.waiter_id);
+    }
+    if (safeUpdates.rider_id !== undefined) {
+      safeUpdates.rider_id = this._sanitizeForeignKey('users', safeUpdates.rider_id);
+    }
+
+    for (const [key, value] of Object.entries(safeUpdates)) {
       if (key !== 'id') {
         fields.push(`${key} = @${key}`);
         params[key] = value;
@@ -95,10 +135,9 @@ class OrderRepository {
         fields.push('sync_version = COALESCE(sync_version, 0) + 1');
       }
       if (!params.payload_version) {
-        try {
-          const hasPv = dbEngine.prepare("PRAGMA table_info(orders)").all().some((c) => c.name === 'payload_version');
-          if (hasPv) fields.push('payload_version = COALESCE(payload_version, 1) + 1');
-        } catch { /* column may not exist */ }
+        if (this._checkPayloadVersion()) {
+          fields.push('payload_version = COALESCE(payload_version, 1) + 1');
+        }
       }
 
       dbEngine.prepare(`

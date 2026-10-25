@@ -14,10 +14,10 @@ class SyncService {
   queueSyncEvent(entityType, entityId, action, metadata = {}, payloadVersion = 1, options = {}) {
     try {
       const row = dbEngine.prepare("SELECT value FROM application_settings WHERE key = 'cloud_sync_enabled'").get();
-      const cloudSyncEnabled = row ? (row.value === 'true') : true; // Default to true if not found, though configService defaults to false now. But we should check carefully. Actually, in DB it's stored as 'false' or 'true'.
+      const cloudSyncEnabled = row ? (row.value === 'true') : false;
       
-      if (cloudSyncEnabled === false) {
-        return; // Do not queue if cloud sync is explicitly disabled
+      if (!cloudSyncEnabled) {
+        return; // Do not queue if cloud sync is disabled
       }
 
       const id = crypto.randomUUID();
@@ -191,6 +191,19 @@ class SyncService {
       return dbEngine.prepare(`DELETE FROM sync_queue`).run().changes;
     }
     return dbEngine.prepare(`DELETE FROM sync_queue WHERE status = 'SYNCED' OR permanent_failure = 1`).run().changes;
+  }
+
+  purgeAllSyncQueue() {
+    try {
+      const info = dbEngine.prepare(`DELETE FROM sync_queue`).run();
+      try { dbEngine.db.pragma('wal_checkpoint(TRUNCATE)'); } catch { /* ignore */ }
+      try { dbEngine.db.exec('VACUUM'); } catch { /* ignore */ }
+      console.log(`[SyncService] Completely purged sync_queue (${info.changes} rows removed) and vacuumed database.`);
+      return info.changes;
+    } catch (e) {
+      console.error('[SyncService] Failed to purge sync_queue:', e.message);
+      return 0;
+    }
   }
 
   collapseDuplicatePending() {
