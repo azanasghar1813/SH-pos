@@ -1,9 +1,9 @@
 {
-  "name": "restaurant-pos",
-  "productName": "Restaurant POS",
-  "version": "4.0.0",
-  "author": "Dubai Food",
-  "description": "Offline Windows Desktop Restaurant POS",
+  "name": "sh-pos",
+  "productName": "SH POS",
+  "version": "1.0.0",
+  "author": "SH POS",
+  "description": "SH POS - Shawarma & Fast Food POS System",
   "main": "main.js",
   "type": "module",
   "scripts": {
@@ -45,8 +45,8 @@
     "electron-builder": "^25.1.8"
   },
   "build": {
-    "appId": "com.dubaifood.restaurantpos",
-    "productName": "Restaurant POS",
+    "appId": "com.shpos.app",
+    "productName": "SH POS",
     "asarUnpack": [
       "backend/**/*",
       "backend/.env",
@@ -55,7 +55,7 @@
     ],
     "npmRebuild": false,
     "directories": {
-      "output": "dist-electron-5"
+      "output": "dist-sh-pos"
     },
     "files": [
       "main.js",
@@ -88,7 +88,8 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "executableName": "SH POS"
     },
     "nsis": {
       "oneClick": true,
@@ -100,7 +101,7 @@
       "useZip": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
-      "shortcutName": "Restaurant POS",
+      "shortcutName": "SH POS",
       "include": "build/installer.nsh",
       "warningsAsErrors": false
     },

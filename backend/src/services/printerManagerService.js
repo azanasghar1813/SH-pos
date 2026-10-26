@@ -80,19 +80,7 @@ class PrinterManagerService {
       `).run(status, printerId);
     } catch { /* non-critical */ }
 
-    // Append to printer_status_log
-    try {
-      dbEngine.prepare(`
-        INSERT INTO printer_status_log (id, printer_id, status, error_detail, job_id, recorded_at)
-        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-      `).run(
-        crypto.randomUUID(),
-        printerId,
-        status,
-        options.error || null,
-        options.jobId || null
-      );
-    } catch { /* non-critical */ }
+    // Live status is saved in printers.status column (no bloat log table needed)
   }
 
   /**

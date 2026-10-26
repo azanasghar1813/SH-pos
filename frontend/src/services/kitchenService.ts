@@ -8,6 +8,22 @@ export const kitchenService = {
     return apiClient.get(`/kitchen/queue?${params.toString()}`)
   },
 
+  getLcdQueue: async (): Promise<{ success: boolean; data: any[] }> => {
+    return apiClient.get('/kitchen/lcd-queue')
+  },
+
+  lcdMarkReady: async (itemId: string): Promise<{ success: boolean; data: any }> => {
+    return apiClient.post(`/kitchen/lcd-ready/${itemId}`, {})
+  },
+
+  lcdMarkServed: async (itemId: string): Promise<{ success: boolean; data: any }> => {
+    return apiClient.post(`/kitchen/lcd-served/${itemId}`, {})
+  },
+
+  lcdStartPreparing: async (itemId: string): Promise<{ success: boolean; data: any }> => {
+    return apiClient.post(`/kitchen/lcd-start/${itemId}`, {})
+  },
+
   // Get ticket by order ID
   getTicket: async (orderId: string): Promise<{ success: boolean; data: any }> => {
     return apiClient.get(`/kitchen/tickets/${orderId}`)

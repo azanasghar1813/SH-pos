@@ -28,7 +28,7 @@ class ReceiptService {
 
     // ── Business Information ──────────────────────────────────────────────────
     const business = {
-      name: businessProfile.business_name || 'Dubai Foods',
+      name: businessProfile.business_name || 'SH-POS',
       address: businessProfile.address || 'Opposite Akbar Plaza Near Waqas Nazir Printers Layyah Road,\nChowk Azam (Layyah)',
       phone: businessProfile.phone || '0308-8020784, 0345-6420784',
       email: businessProfile.email || '',

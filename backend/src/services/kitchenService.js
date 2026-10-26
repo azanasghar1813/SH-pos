@@ -12,6 +12,7 @@ import { kitchenQueueService } from './kitchenQueueService.js';
 import { kitchenStatusService } from './kitchenStatusService.js';
 import { kitchenNotesService } from './kitchenNotesService.js';
 import { KitchenState, OrderLifecycleState, AllowedLifecycleTransitions } from '../constants/orderStates.js';
+import { socketService } from './socketService.js';
 
 class KitchenService {
   _getUser(userId) {
@@ -20,6 +21,7 @@ class KitchenService {
   }
 
   _isKitchenOperator(userId) {
+    if (userId === 'KITCHEN_LCD' || userId === 'SYSTEM') return true;
     const user = this._getUser(userId);
     if (!user) return false;
     const role = String(user.role_name || '').toUpperCase();
@@ -188,6 +190,18 @@ class KitchenService {
       kitchen_state: aggregateState,
       lifecycle_state: updatedOrder.lifecycle_state
     });
+
+    try {
+      socketService.io?.emit('kitchen:queue_updated', {
+        order_id: orderId,
+        order_number: order.order_number,
+        kitchen_state: aggregateState,
+        lifecycle_state: updatedOrder.lifecycle_state
+      });
+      socketService.emitOrderUpserted(updatedOrder);
+    } catch (e) {
+      console.warn('[KitchenService] Socket broadcast failed:', e.message);
+    }
 
     return updatedOrder;
   }

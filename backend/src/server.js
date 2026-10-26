@@ -7,12 +7,7 @@ import { configService } from './services/configService.js';
 import { menuCacheService } from './services/menuCacheService.js';
 import { printEngineService } from './services/printEngineService.js';
 import { printerDriverService } from './services/printerDriverService.js';
-import { syncWorker } from './sync/syncWorker.js';
-import { backupService } from './backup/backupService.js';
 import { socketService } from './services/socketService.js';
-import { lanCatalogSyncService } from './services/lanCatalogSyncService.js';
-import { lanSyncService } from './services/lanSyncService.js';
-import { syncService } from './services/syncService.js';
 process.on('uncaughtException', (err) => {
   console.error('[UNCAUGHT EXCEPTION]', err.name, err.message);
   if (err.stack) console.error(err.stack);
@@ -114,14 +109,6 @@ const startServer = async () => {
     menuCacheService.initialize();
     printEngineService.start();
     printerDriverService.ensureRawWorker().catch(e => console.warn('[PrinterDriver] Prewarming worker failed:', e.message));
-    syncWorker.start();
-    const syncCfg = configService.getSyncConfig();
-    if (!syncCfg.cloud_sync_enabled) {
-      syncService.purgeAllSyncQueue();
-    }
-    backupService.startScheduler();
-    lanCatalogSyncService.startAutoSync();
-    lanSyncService.startBackgroundRetries();
 
     // Start periodic WAL maintenance now that the DB connection is live.
     // Cheap no-op checks every 15 min; only does real work if WAL > 64MB.
@@ -148,10 +135,8 @@ const startServer = async () => {
       isShuttingDown = true;
 
       console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
-      syncWorker.stop();
       printEngineService.stop();
       printerDriverService.shutdown();
-      lanCatalogSyncService.stopAutoSync();
       dbEngine.close();
 
       server.close(() => {

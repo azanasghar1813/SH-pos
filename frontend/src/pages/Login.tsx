@@ -81,8 +81,9 @@ export default function Login() {
           {/* Top accent line */}
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-orange-400" />
           
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-black tracking-tight mb-2">Dubai Foods</h1>
+          <div className="text-center mb-8 flex flex-col items-center">
+            <img src="/receipt_logo.png" alt="SH-POS Logo" className="w-24 h-24 object-contain mb-3 drop-shadow-md" />
+            <h1 className="text-4xl font-black tracking-tight mb-2">SH-POS</h1>
             <p className="text-muted-foreground font-medium">Terminal Authentication</p>
           </div>
 

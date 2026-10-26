@@ -51,6 +51,11 @@ class PrintQueueService {
    * @returns {string} - New print job UUID
    */
   enqueue(jobType, printerId, payload, options = {}) {
+    try {
+      // Auto-prune old completed print jobs older than 3 days to keep DB lean
+      dbEngine.prepare("DELETE FROM print_jobs WHERE status = 'COMPLETED' AND created_at < datetime('now', '-3 days')").run();
+    } catch { /* non-critical */ }
+
     const id = crypto.randomUUID();
     const payloadJson = JSON.stringify(payload);
 

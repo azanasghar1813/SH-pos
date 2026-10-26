@@ -4,16 +4,25 @@ backend/node_modules/
 frontend/node_modules/
 
 # Build outputs
+dist-sh-pos/
+dist-electron-*/
 dist-electron-5/
+dist-electron/
+release/
 *.exe
 backend/bin/node.exe
-# Environment files
+
+# Environment & Secrets files
 .env
 .env.*
 backend/.env
 sync-api/.env
 ADMIN_PIN.txt
 **/ADMIN_PIN.txt
+secrets.json
+**/secrets.json
+*.pem
+*.key
 
 # Database & Data
 # backend/storage/database/*.db
@@ -48,3 +57,17 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Storage, Uploads & Temp
+storage/
+temp_uploads/
+backend/temp_uploads/
+backend/storage/backups/
+backend/storage/logs/
+backend/storage/temp/
+backend/storage/exports/
+backend/storage/updates/
+
+# Agents & System Generated
+.agents/
+.system_generated/

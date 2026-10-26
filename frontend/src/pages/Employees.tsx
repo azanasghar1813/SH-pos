@@ -173,7 +173,7 @@ export default function Employees() {
       pinStatus: "Configured",
       lastLogin: "Never",
       cnic: "42101-XXXXXXX-X",
-      address: "Dubai main avenue, UAE",
+      address: "Main Layyah Road, Layyah",
       emergencyContact: "",
       joinedDate: new Date().toISOString().split("T")[0],
       assignedCounter: "Counter #1",

@@ -21,7 +21,7 @@ interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      restaurantName: "Dubai Foods",
+      restaurantName: "SH-POS",
       phoneNumber: "0308-8020784, 0345-6420784",
       address: "Opposite Akbar Plaza Near Waqas Nazir Printers Layyah Road,\nChowk Azam (Layyah)",
       trn: "100234567890",
@@ -54,13 +54,16 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: 'settings-storage',
-      version: 4,
+      version: 5,
       migrate: (persistedState: any, version: number) => {
         const next = { ...persistedState, taxRate: 0, currencySymbol: "Rs" }
         if (!version || version < 4) {
           next.address = "Opposite Akbar Plaza Near Waqas Nazir Printers Layyah Road,\nChowk Azam (Layyah)"
           next.phoneNumber = "0308-8020784, 0345-6420784"
           next.currencySymbol = "Rs"
+        }
+        if (!version || version < 5 || !next.restaurantName || next.restaurantName.includes("Dubai")) {
+          next.restaurantName = "SH-POS"
         }
         return next
       },

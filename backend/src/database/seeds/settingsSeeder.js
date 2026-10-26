@@ -12,11 +12,11 @@ export const runSettingsSeeder = (db) => {
   
   const defaultSettings = [
     // General
-    { key: 'business_name', val: 'Dubai Foods', cat: 'GENERAL', desc: 'The official name of the business' },
+    { key: 'business_name', val: 'SH-POS', cat: 'GENERAL', desc: 'The official name of the business' },
     { key: 'business_address', val: 'Opposite Akbar Plaza Near Waqas Nazir Printers Layyah Road,\nChowk Azam (Layyah)', cat: 'GENERAL', desc: 'Main physical address' },
     { key: 'phone_number', val: '0308-8020784, 0345-6420784', cat: 'GENERAL', desc: 'Main contact number' },
     { key: 'whatsapp_number', val: '0308-8020784, 0345-6420784', cat: 'GENERAL', desc: 'WhatsApp support number' },
-    { key: 'email_address', val: 'contact@dubaifood.com', cat: 'GENERAL', desc: 'Support email address' },
+    { key: 'email_address', val: 'contact@shpos.com', cat: 'GENERAL', desc: 'Support email address' },
     { key: 'timezone', val: 'Asia/Karachi', cat: 'GENERAL', desc: 'Business timezone' },
     
     // Financial
@@ -39,7 +39,8 @@ export const runSettingsSeeder = (db) => {
   }
 
   const forceSettings = [
-    ['business_name', 'Dubai Foods'],
+    ['business_name', 'SH-POS'],
+    ['restaurant_name', 'SH-POS'],
     ['business_address', 'Opposite Akbar Plaza Near Waqas Nazir Printers Layyah Road,\nChowk Azam (Layyah)'],
     ['address', 'Opposite Akbar Plaza Near Waqas Nazir Printers Layyah Road,\nChowk Azam (Layyah)'],
     ['phone_number', '0308-8020784, 0345-6420784'],

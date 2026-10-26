@@ -101,7 +101,7 @@ class KitchenTicketGeneratorService {
         is_vip:         !!(order.is_vip || order.metadata?.is_vip === 'true' || order.customer?.is_vip),
         cashier_id:     order.cashier_user_id,
         cashier_name:   order.cashier_name || null,
-        branch_name:    businessProfile.business_name || 'Dubai Foods',
+        branch_name:    businessProfile.business_name || 'SH-POS',
         business_date:  order.business_date,
         created_at:     order.created_at,
         notes:          order.notes || null,

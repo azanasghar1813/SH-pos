@@ -52,15 +52,21 @@ export const initSocket = async () => {
         // orderPayload is already populated with items, timeline, etc from orderUpsertService / orderService
         const frontendOrder = mapHistoryDetailToOrder(orderPayload, orderPayload);
         useOrderStore.getState().upsertOrder(frontendOrder);
+        window.dispatchEvent(new CustomEvent('lcd-queue-updated', { detail: orderPayload }));
       } catch (err) {
         console.error('[Socket] Failed to process incoming order push', err);
       }
+    });
+
+    socket.on('kitchen:queue_updated', (payload) => {
+      window.dispatchEvent(new CustomEvent('lcd-queue-updated', { detail: payload }));
     });
 
     socket.on('order:deleted', (orderId: string) => {
       if (!orderId) return;
       console.log('[Socket] Order Deleted:', orderId);
       useOrderStore.setState(s => ({ orders: s.orders.filter(o => o.id !== orderId) }));
+      window.dispatchEvent(new CustomEvent('lcd-queue-updated', { detail: { orderId, deleted: true } }));
     });
 
     socket.on('catalog:updated', async () => {

@@ -73,7 +73,7 @@ export function AppInitializer({ children }: { children: React.ReactNode }) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground">
         <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-        <h2 className="text-xl font-bold">Initializing Dubai Foods POS...</h2>
+        <h2 className="text-xl font-bold">Initializing SH-POS...</h2>
         <p className="text-muted-foreground mt-2">Loading secure session & configuration</p>
       </div>
     )

@@ -4,6 +4,21 @@ import { kitchenController } from '../controllers/kitchenController.js';
 
 const router = Router();
 
+// Public LCD TV Screen endpoints (allows TV to display orders on LAN without login session)
+router.get('/lcd-queue', kitchenController.getQueue);
+router.post('/lcd-ready/:itemId', (req, res, next) => {
+  req.user = { userId: 'KITCHEN_LCD', roleId: 'KITCHEN', permissions: ['KITCHEN_MANAGE'] };
+  next();
+}, kitchenController.markItemReady);
+router.post('/lcd-served/:itemId', (req, res, next) => {
+  req.user = { userId: 'KITCHEN_LCD', roleId: 'KITCHEN', permissions: ['KITCHEN_MANAGE'] };
+  next();
+}, kitchenController.markItemServed);
+router.post('/lcd-start/:itemId', (req, res, next) => {
+  req.user = { userId: 'KITCHEN_LCD', roleId: 'KITCHEN', permissions: ['KITCHEN_MANAGE'] };
+  next();
+}, kitchenController.startPreparingItem);
+
 router.use(authenticate);
 
 router.get('/queue', kitchenController.getQueue);

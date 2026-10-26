@@ -3,6 +3,11 @@ import { dbEngine } from '../database/sqlite.js';
 
 export const sessionRepository = {
   createSession: (userId, tokenId, deviceInfo = 'Unknown') => {
+    try {
+      // Auto-prune old revoked or expired sessions to prevent table growth
+      dbEngine.db.prepare("DELETE FROM user_sessions WHERE status = 'REVOKED' OR created_at < datetime('now', '-7 days')").run();
+    } catch { /* non-critical */ }
+
     const sessionId = crypto.randomUUID();
     const stmt = dbEngine.db.prepare(`
       INSERT INTO user_sessions (id, user_id, token_id, device_info)

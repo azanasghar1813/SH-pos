@@ -21,7 +21,8 @@ import {
   Shield,
   Menu,
   Grid2X2,
-  MonitorSmartphone
+  MonitorSmartphone,
+  Tv
 } from "lucide-react"
 
 const menuItems = [
@@ -29,18 +30,14 @@ const menuItems = [
   { path: "/pos", name: "POS", icon: ShoppingCart, permission: "VIEW_POS" },
   { path: "/orders", name: "Orders", icon: ClipboardList, permission: "VIEW_ORDERS" },
   { path: "/reports", name: "Reports", icon: BarChart3, permission: "VIEW_REPORTS" },
-  { path: "/kds", name: "Kitchen", icon: ChefHat, permission: "VIEW_KITCHEN" },
+  { path: "/lcd", name: "Live LCD Screen", icon: Tv, permission: "VIEW_KITCHEN" },
+  { path: "/kds", name: "Kitchen Monitor", icon: ChefHat, permission: "VIEW_KITCHEN" },
   { path: "/products", name: "Products", icon: UtensilsCrossed, permission: "VIEW_PRODUCTS" },
   { path: "/categories", name: "Categories", icon: Tags, permission: "VIEW_CATEGORIES" },
   { path: "/customers", name: "Customers", icon: UserSquare2, permission: "VIEW_CUSTOMERS" },
   { path: "/tables", name: "Tables", icon: Grid2X2, permission: "VIEW_TABLES" },
-  { path: "/cashier", name: "Cashiers", icon: Wallet, permission: "VIEW_CASHIERS" },
   { path: "/settings", name: "Settings", icon: Building2, permission: "VIEW_SETTINGS" },
-  { path: "/backup", name: "Backup", icon: Database, permission: "VIEW_BACKUP" },
-  { path: "/sync", name: "Cloud Backup", icon: RefreshCw, permission: "VIEW_SYNC" },
-  { path: "/lan-sync", name: "LAN Sync", icon: MonitorSmartphone, permission: "VIEW_SYNC" },
   { path: "/permissions", name: "Users", icon: Shield, permission: "VIEW_USERS" },
-  { path: "/activity-logs", name: "Activity Logs", icon: History, permission: "VIEW_ACTIVITY_LOGS" },
 ]
 
 export default function Sidebar() {
@@ -69,8 +66,8 @@ export default function Sidebar() {
       >
         <div className="h-16 flex items-center justify-between border-b border-border/50 px-4">
           {isSidebarOpen && (
-            <h1 className="text-xl font-bold text-primary truncate">
-              Dubai Foods
+            <h1 className="text-xl font-black text-primary tracking-wider truncate">
+              SH POS
             </h1>
           )}
           <button 

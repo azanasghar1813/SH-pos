@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useKdsStore, type KitchenTicket } from '../store/kdsStore'
 import { usePrinterStore } from '../store/printerStore'
 import { 
-  Search, Printer, CheckCircle2, AlertCircle, RefreshCw, Clock, Usb, Bluetooth, Network, Settings2, RefreshCcw, XCircle
+  Search, Printer, CheckCircle2, AlertCircle, RefreshCw, Clock, Usb, Bluetooth, Network, Settings2, RefreshCcw, XCircle, Tv
 } from 'lucide-react'
 import { configApi } from '../api/configApi'
 
@@ -227,6 +227,15 @@ export const KDS: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => window.open('/lcd', '_blank')}
+            className="p-2.5 bg-amber-500 hover:bg-amber-400 text-neutral-950 font-black border border-amber-600 rounded-xl transition-all flex items-center gap-2 shadow-md shadow-amber-500/20"
+            title="Open Live LCD Screen in New Window / TV Display"
+          >
+            <Tv className="w-4 h-4 stroke-[2.5]" />
+            <span className="text-xs font-black hidden sm:inline">Open Live LCD TV</span>
+          </button>
+
           <button 
             onClick={togglePrinterHub}
             className={`p-2.5 rounded-xl border transition-colors flex items-center gap-2 ${

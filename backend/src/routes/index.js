@@ -16,22 +16,13 @@ import historyRoutes from './historyRoutes.js';
 import customerRoutes from './customerRoutes.js';
 import inventoryRoutes from './inventoryRoutes.js';
 import expenseRoutes from './expenseRoutes.js';
-import activityLogRoutes from './activityLogRoutes.js';
 import reportRoutes from './reportRoutes.js';
 import shiftRoutes from './shiftRoutes.js';
 import tableRoutes from './tableRoutes.js';
-import backupRoutes from './backupRoutes.js';
-import syncRoutes from './syncRoutes.js';
-import lanHubRouter from './lanHubRouter.js';
-import lanCatalogRouter from './lanCatalogRouter.js';
-import lanRoutes from './lanRoutes.js';
 
 const router = Router();
 
 // Mount all routes here
-router.use('/internal', lanHubRouter);
-router.use('/internal/lan-catalog', lanCatalogRouter);
-router.use('/lan', lanRoutes);
 router.use('/health', healthRoutes);
 router.use('/tables', tableRoutes);
 router.use('/auth', authRoutes);
@@ -50,10 +41,7 @@ router.use('/history', historyRoutes);
 router.use('/customers', customerRoutes);
 router.use('/inventory', inventoryRoutes);
 router.use('/expenses', expenseRoutes);
-router.use('/activity-logs', activityLogRoutes);
 router.use('/reports', reportRoutes);
 router.use('/shifts', shiftRoutes);
-router.use('/backup', backupRoutes);
-router.use('/sync', syncRoutes);
 
 export default router;

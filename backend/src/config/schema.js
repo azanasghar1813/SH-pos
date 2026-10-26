@@ -7,7 +7,7 @@ import { z } from 'zod';
  */
 export const envSchema = z.object({
   // App
-  APP_NAME: z.string().default('Dubai Food Software POS'),
+  APP_NAME: z.string().default('SH POS'),
   APP_VERSION: z.string().default('1.0.0'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   
@@ -24,15 +24,8 @@ export const envSchema = z.object({
   // Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly']).default('info'),
 
-  // Sync API — DEVICE_SECRET must come from env or Electron secrets.json, never a source default
-  SYNC_API_URL: z.string().url().default('https://dubaifood-sync-api.vercel.app/api/v1'),
-  SYNC_API_FALLBACK_URL: z.preprocess(
-    (value) => {
-      if (value == null) return undefined;
-      const trimmed = String(value).trim();
-      return trimmed === '' ? undefined : trimmed;
-    },
-    z.string().url().optional()
-  ),
-  DEVICE_SECRET: z.string().min(16),
+  // Sync API
+  SYNC_API_URL: z.string().optional(),
+  SYNC_API_FALLBACK_URL: z.string().optional(),
+  DEVICE_SECRET: z.string().optional(),
 });
